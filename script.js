@@ -9,11 +9,33 @@ let todos = [];
 
 // ---------- Render: draw the page FROM the data ----------
 function render() {
-  list.innerHTML = ""; // wipe the old list (safe: we're inserting nothing)
+  list.innerHTML = "";
 
   todos.forEach((todo) => {
     const li = document.createElement("li");
-    li.textContent = todo.text;
+    li.dataset.id = todo.id; // stick the task's id on the <li>
+    if (todo.done) li.classList.add("done"); // add a CSS class if finished
+
+    // Checkbox + text, wrapped in a <label> so clicking the text also ticks the box
+    const label = document.createElement("label");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = todo.done;
+
+    const span = document.createElement("span");
+    span.textContent = todo.text;
+
+    label.append(checkbox, span);
+
+    // Delete button
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "delete";
+    del.textContent = "×";
+    del.setAttribute("aria-label", "Delete task"); // screen readers say this instead of "×"
+
+    li.append(label, del);
     list.appendChild(li);
   });
 
@@ -38,6 +60,28 @@ form.addEventListener("submit", (event) => {
 
   input.value = "";
   input.focus();
+});
+
+
+// Tick / untick a task
+list.addEventListener("change", (event) => {
+  if (event.target.type !== "checkbox") return; // only care about checkboxes
+
+  const id = Number(event.target.closest("li").dataset.id);
+  const todo = todos.find((t) => t.id === id);
+  todo.done = event.target.checked;
+
+  render();
+});
+
+// Delete a task
+list.addEventListener("click", (event) => {
+  if (!event.target.matches(".delete")) return; // only care about delete buttons
+
+  const id = Number(event.target.closest("li").dataset.id);
+  todos = todos.filter((t) => t.id !== id); // keep every task EXCEPT this one
+
+  render();
 });
 
 render(); // draw once on page load
