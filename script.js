@@ -1,21 +1,43 @@
-// 1. FIND the elements we need (do this once, at the top)
+// ---------- Elements ----------
 const form = document.getElementById("todo-form");
 const input = document.getElementById("todo-input");
 const list = document.getElementById("todo-list");
+const count = document.getElementById("todo-count");
 
-// 2. LISTEN for the form being submitted (click Add OR press Enter)
+// ---------- State: the single source of truth ----------
+let todos = [];
+
+// ---------- Render: draw the page FROM the data ----------
+function render() {
+  list.innerHTML = ""; // wipe the old list (safe: we're inserting nothing)
+
+  todos.forEach((todo) => {
+    const li = document.createElement("li");
+    li.textContent = todo.text;
+    list.appendChild(li);
+  });
+
+  const left = todos.filter((todo) => !todo.done).length;
+  count.textContent = `${left} ${left === 1 ? "task" : "tasks"} left`;
+}
+
+// ---------- Events: change the data, then render ----------
 form.addEventListener("submit", (event) => {
-  event.preventDefault(); // stop the browser reloading the page
+  event.preventDefault();
 
-  const text = input.value.trim(); // what the user typed, minus extra spaces
-  if (text === "") return; // ignore spaces-only input
+  const text = input.value.trim();
+  if (text === "") return;
 
-  // 3. CREATE a new <li>, put the text in it, ADD it to the list
-  const li = document.createElement("li");
-  li.textContent = text;
-  list.appendChild(li);
+  todos.push({
+    id: Date.now(), // a unique number for this task (milliseconds since 1970)
+    text: text,
+    done: false,
+  });
 
-  // 4. Clear the box and put the cursor back in it, ready for the next task
+  render();
+
   input.value = "";
   input.focus();
 });
+
+render(); // draw once on page load
