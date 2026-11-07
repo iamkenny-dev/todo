@@ -5,7 +5,30 @@ const list = document.getElementById("todo-list");
 const count = document.getElementById("todo-count");
 
 // ---------- State: the single source of truth ----------
-let todos = [];
+
+function render() {
+  save(); // every change ends with render(), so saving here never misses one
+  list.innerHTML = "";
+  // ...rest stays the same
+  
+// let todos = [];
+
+const STORAGE_KEY = "todos"; // the name of our "box" in localStorage
+
+function load() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : []; // nothing saved yet? start empty
+  } catch {
+    return []; // saved data is broken? start empty instead of crashing
+  }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+}
+
+let todos = load();
 
 // ---------- Render: draw the page FROM the data ----------
 function render() {
