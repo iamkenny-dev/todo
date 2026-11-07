@@ -3,24 +3,19 @@ const form = document.getElementById("todo-form");
 const input = document.getElementById("todo-input");
 const list = document.getElementById("todo-list");
 const count = document.getElementById("todo-count");
+const filters = document.querySelector(".filters");
+const filterButtons = document.querySelectorAll("[data-filter]");
+const clearDone = document.getElementById("clear-done");
 
-// ---------- State: the single source of truth ----------
-
-function render() {
-  save(); // every change ends with render(), so saving here never misses one
-  list.innerHTML = "";
-  // ...rest stays the same
-  
-// let todos = [];
-
-const STORAGE_KEY = "todos"; // the name of our "box" in localStorage
+// ---------- State ----------
+const STORAGE_KEY = "todos";
 
 function load() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : []; // nothing saved yet? start empty
+    return saved ? JSON.parse(saved) : [];
   } catch {
-    return []; // saved data is broken? start empty instead of crashing
+    return [];
   }
 }
 
@@ -29,17 +24,27 @@ function save() {
 }
 
 let todos = load();
+let filter = "all"; // which tasks to show: "all", "active" or "done"
 
-// ---------- Render: draw the page FROM the data ----------
+// ---------- Helpers ----------
+function isVisible(todo) {
+  if (filter === "active") return !todo.done;
+  if (filter === "done") return todo.done;
+  return true; // "all"
+}
+
+// ---------- Render ----------
 function render() {
+  save();
   list.innerHTML = "";
 
-  todos.forEach((todo) => {
-    const li = document.createElement("li");
-    li.dataset.id = todo.id; // stick the task's id on the <li>
-    if (todo.done) li.classList.add("done"); // add a CSS class if finished
+  const visible = todos.filter(isVisible);
 
-    // Checkbox + text, wrapped in a <label> so clicking the text also ticks the box
+  visible.forEach((todo) => {
+    const li = document.createElement("li");
+    li.dataset.id = todo.id;
+    if (todo.done) li.classList.add("done");
+
     const label = document.createElement("label");
 
     const checkbox = document.createElement("input");
@@ -51,44 +56,53 @@ function render() {
 
     label.append(checkbox, span);
 
-    // Delete button
     const del = document.createElement("button");
     del.type = "button";
     del.className = "delete";
     del.textContent = "×";
-    del.setAttribute("aria-label", "Delete task"); // screen readers say this instead of "×"
+    del.setAttribute("aria-label", "Delete task");
 
     li.append(label, del);
     list.appendChild(li);
   });
 
+  // Empty message, so the list never looks broken
+  if (visible.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "empty";
+    empty.textContent =
+      todos.length === 0 ? "No tasks yet. Add one above." : "Nothing here.";
+    list.appendChild(empty);
+  }
+
   const left = todos.filter((todo) => !todo.done).length;
   count.textContent = `${left} ${left === 1 ? "task" : "tasks"} left`;
+
+  // Show which filter is selected
+  filterButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", button.dataset.filter === filter);
+  });
+
+  // Only show "Clear done" when there is something to clear
+  clearDone.hidden = !todos.some((todo) => todo.done);
 }
 
-// ---------- Events: change the data, then render ----------
+// ---------- Events ----------
 form.addEventListener("submit", (event) => {
   event.preventDefault();
 
   const text = input.value.trim();
   if (text === "") return;
 
-  todos.push({
-    id: Date.now(), // a unique number for this task (milliseconds since 1970)
-    text: text,
-    done: false,
-  });
-
+  todos.push({ id: Date.now(), text: text, done: false });
   render();
 
   input.value = "";
   input.focus();
 });
 
-
-// Tick / untick a task
 list.addEventListener("change", (event) => {
-  if (event.target.type !== "checkbox") return; // only care about checkboxes
+  if (event.target.type !== "checkbox") return;
 
   const id = Number(event.target.closest("li").dataset.id);
   const todo = todos.find((t) => t.id === id);
@@ -97,14 +111,37 @@ list.addEventListener("change", (event) => {
   render();
 });
 
-// Delete a task
 list.addEventListener("click", (event) => {
-  if (!event.target.matches(".delete")) return; // only care about delete buttons
+  if (!event.target.matches(".delete")) return;
 
   const id = Number(event.target.closest("li").dataset.id);
-  todos = todos.filter((t) => t.id !== id); // keep every task EXCEPT this one
+  todos = todos.filter((t) => t.id !== id);
 
   render();
 });
 
-render(); // draw once on page load
+filters.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-filter]");
+  if (!button) return;
+
+  filter = button.dataset.filter;
+  render();
+});
+
+clearDone.addEventListener("click", () => {
+  todos = todos.filter((t) => !t.done);
+  render();
+});
+
+// Today's date on the receipt
+document.getElementById("today").textContent = new Date().toLocaleDateString(
+  "en-GB",
+  {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  },
+);
+
+render();

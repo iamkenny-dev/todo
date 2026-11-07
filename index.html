@@ -5,21 +5,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To-Do</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <main class="app">
-        <h1>To-Do</h1>
+        <header class="receipt-head">
+            <p class="small">*** TASK RECEIPT ***</p>
+            <h1>To-Do</h1>
+            <p class="small" id="today"></p>
+        </header>
 
         <form id="todo-form">
-            <input id="todo-input" type="text" placeholder="What needs doing?" autocomplete="off" required>
+            <label for="todo-input" class="visually-hidden">New task</label>
+            <input id="todo-input" type="text" placeholder="What needs doing?" autocomplete="off" maxlength="120"
+                required>
             <button type="submit">Add</button>
         </form>
 
+        <div class="filters">
+            <button type="button" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" data-filter="active" aria-pressed="false">Active</button>
+            <button type="button" data-filter="done" aria-pressed="false">Done</button>
+        </div>
+
         <ul id="todo-list"></ul>
 
-        <p id="todo-count"></p>
+        <footer class="todo-footer">
+            <p id="todo-count"></p>
+            <button type="button" id="clear-done">Clear done</button>
+        </footer>
+
+        <p class="small thanks">THANK YOU FOR GETTING THINGS DONE</p>
     </main>
 
     <script src="script.js"></script>
